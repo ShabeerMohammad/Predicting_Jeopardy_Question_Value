@@ -1,4 +1,3 @@
-
 #importing the required libraries
 import numpy as np
 import nltk
@@ -65,12 +64,22 @@ xtrain,xtest,ytrain,ytest = train_test_split(X,y,test_size=0.25,random_state=0)
 print(xtrain.shape,ytrain.shape)
 print(xtest.shape,ytest.shape)
 
+#Let’s get the embeddings for all the questions in the training and validation sets
+from bert_serving.client import BertClient
+bc = BertClient(ip='')
+
+xtrain_bert = bc.encode(xtrain.tolist())
+xtest_bert = bc.encode(xtest.tolist())
+
+#build the linear regression model
 from sklearn.linear_model import LinearRegression
 model_linear = LinearRegression()
-model_linear.fit(xtrain,ytrain)
+model_linear.fit(xtrain_bert,ytrain)
 
-y_pred = model_linear.predict(xtest)
+#predicting the data
+y_pred = model_linear.predict(xtest_bert)
 
+#metrics
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
 
@@ -78,6 +87,6 @@ test_mse = mean_squared_error(ytest,y_pred)
 test_rmse = np.sqrt(test_mse)
 test_mae = mean_absolute_error(ytest,y_pred)
 
+#with cross validation
 from sklearn.model_selection import cross_val_score
 cv_result = cross_val_score(model_linear, xtrain, ytrain, cv=4, scoring='neg_mean_squared_error')
-
